@@ -1,6 +1,6 @@
 package data
 
-type EmailAccount struct {
+type Account struct {
 
 	Email		string		`json:"email"`
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/database"
-	"github.com/yebology/giggle-backend/errors"
+	"github.com/yebology/giggle-backend/output"
 	"github.com/yebology/giggle-backend/model"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -21,16 +21,16 @@ func GetPost(c *fiber.Ctx) error {
 	collection := database.GetDatabase().Collection("post")
 	cursor, err := collection.Find(ctx, bson.M{})
 	if err != nil {
-		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 	defer cursor.Close(ctx)
 
 	err = cursor.All(ctx, &posts)
 	if err != nil {
-		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return output.GetSuccess(c, fiber.Map{
 		"message": "Successfully fetch post!",
 		"data": fiber.Map{
 			"posts": posts,

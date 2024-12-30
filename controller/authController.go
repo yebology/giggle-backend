@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/controller/helper"
 	"github.com/yebology/giggle-backend/database"
-	"github.com/yebology/giggle-backend/errors"
+	"github.com/yebology/giggle-backend/output"
 	"github.com/yebology/giggle-backend/model"
 	"github.com/yebology/giggle-backend/model/data"
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,12 +21,12 @@ func Register(c *fiber.Ctx) error {
 	var user model.User
 	err := c.BodyParser(&user)
 	if err != nil {
-		return errors.GetError(c, fiber.StatusBadRequest ,err.Error())
+		return output.GetError(c, fiber.StatusBadRequest ,err.Error())
 	}
 
 	hashedPassword, err := helper.HashPassword(user.Password)
 	if err != nil {
-		return errors.GetError(c, fiber.StatusBadRequest, "Error while hashing password!")
+		return output.GetError(c, fiber.StatusBadRequest, "Error while hashing password!")
 	}
 	user.Password = string(hashedPassword)
 
@@ -41,20 +41,20 @@ func Register(c *fiber.Ctx) error {
 	var existingUser model.User
 	err = collection.FindOne(ctx, filter).Decode(&existingUser)
 	if err == nil {
-		return errors.GetError(c, fiber.StatusBadRequest, "Email or username is already taken!")
+		return output.GetError(c, fiber.StatusBadRequest, "Email or username is already taken!")
 	}
 
 	_, err = collection.InsertOne(ctx, user)
 	if err != nil {
-		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	user, err = helper.GetUser(ctx, bson.M{"email": user.Email})
 	if err != nil {
-		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return output.GetSuccess(c, fiber.Map{
 		"message": "Register account successful!",
 		"data": fiber.Map{
 			"user": user,
@@ -71,12 +71,12 @@ func Login(c *fiber.Ctx) error {
 	var login data.Login
 	err := c.BodyParser(&login)
 	if err != nil {
-		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	hashedPassword, err := helper.HashPassword(login.Password)
 	if err != nil {
-		return errors.GetError(c, fiber.StatusBadRequest, "Error while hashing password")
+		return output.GetError(c, fiber.StatusBadRequest, "Error while hashing password")
 	}
 	login.Password = hashedPassword
 
@@ -88,10 +88,10 @@ func Login(c *fiber.Ctx) error {
 		},
 	})
 	if err != nil {
-		return errors.GetError(c, fiber.StatusBadRequest, "Invalid email or password!")
+		return output.GetError(c, fiber.StatusBadRequest, "Invalid email or password!")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return output.GetSuccess(c, fiber.Map{
 		"message": "Login successful!",
 		"data": fiber.Map{
 			"user": user,
@@ -105,22 +105,22 @@ func CheckAccount(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var emailAccount data.EmailAccount
-	err := c.BodyParser(&emailAccount)
+	var account data.Account
+	err := c.BodyParser(&account)
 	if err != nil {
-		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	collection := database.GetDatabase().Collection("user")
-	filter := bson.M{"email": emailAccount.Email}
+	filter := bson.M{"email": account.Email}
 
 	var user model.User
 	err = collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
-		return errors.GetError(c, fiber.StatusBadRequest, "Email hasn't registered yet!")
+		return output.GetError(c, fiber.StatusBadRequest, "Email hasn't registered yet!")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return output.GetSuccess(c, fiber.Map{
 		"message": "Email exists!",
 		"data": fiber.Map{
 			"user": user,

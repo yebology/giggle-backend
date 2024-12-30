@@ -16,4 +16,7 @@ func SetUp(app *fiber.App) {
 	app.Post("/api/create_post", middleware.UserMiddleware, controller.CreatePost)
 	app.Patch("/api/update_post/:id", middleware.UserMiddleware, controller.UpdatePost)
 
+	app.Post("/api/create_group", middleware.UserMiddleware, controller.CreateGroup)
+	app.Patch("/api/invite_member_to_group/:id", middleware.UserMiddleware, controller.InviteMemberToGroup)
+
 }
