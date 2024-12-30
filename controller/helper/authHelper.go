@@ -6,6 +6,7 @@ import (
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func GetUser(ctx context.Context, filter bson.M) (model.User, error) {
@@ -20,5 +21,16 @@ func GetUser(ctx context.Context, filter bson.M) (model.User, error) {
 	defer cursor.Close(ctx)
 
 	return user, nil
+
+}
+
+func HashPassword(password string) (string, error) {
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+
+	return string(hashedPassword), nil
 
 }

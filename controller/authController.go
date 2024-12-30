@@ -9,6 +9,7 @@ import (
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/errors"
 	"github.com/yebology/giggle-backend/model"
+	"github.com/yebology/giggle-backend/model/data"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -23,7 +24,26 @@ func Register(c *fiber.Ctx) error {
 		return errors.GetError(c, err.Error())
 	}
 
+	hashedPassword, err := helper.HashPassword(user.Password)
+	if err != nil {
+		return errors.GetError(c, "Error while hashing password!")
+	}
+	user.Password = string(hashedPassword)
+
 	collection := database.GetDatabase().Collection("user")
+	filter := bson.M{
+		"$or": []bson.M{
+			{"email": user.Email},
+			{"username": user.Username},
+		},
+	}
+
+	var existingUser model.User
+	err = collection.FindOne(ctx, filter).Decode(&existingUser)
+	if err == nil {
+		return errors.GetError(c, "Email or username is already taken!")
+	}
+
 	_, err = collection.InsertOne(ctx, user)
 	if err != nil {
 		return errors.GetError(c, err.Error())
@@ -40,5 +60,43 @@ func Register(c *fiber.Ctx) error {
 			"user": user,
 		},
 	})
+
+}
+
+func Login(c *fiber.Ctx) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var login data.Login
+	err := c.BodyParser(&login)
+	if err != nil {
+		return errors.GetError(c, err.Error())
+	}
+
+	hashedPassword, err := helper.HashPassword(login.Password)
+	if err != nil {
+		return errors.GetError(c, "Error while hashing password")
+	}
+	login.Password = hashedPassword
+
+	var user model.User
+	user, err = helper.GetUser(ctx, bson.M{
+		"$and": []bson.M{
+			{"email": login.Email},
+			{"password": login.Password},
+		},
+	})
+	if err != nil {
+		return errors.GetError(c, "Invalid email or password!")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Login successful!",
+		"data": fiber.Map{
+			"user": user,
+		},
+	})
+
 
 }
