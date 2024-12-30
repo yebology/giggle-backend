@@ -98,5 +98,33 @@ func Login(c *fiber.Ctx) error {
 		},
 	})
 
+}
+
+func CheckAccount(c *fiber.Ctx) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var emailAccount data.EmailAccount
+	err := c.BodyParser(&emailAccount)
+	if err != nil {
+		return errors.GetError(c,err.Error())
+	}
+
+	collection := database.GetDatabase().Collection("user")
+	filter := bson.M{"email": emailAccount.Email}
+
+	var user model.User
+	err = collection.FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		return errors.GetError(c, "Email hasn't registered yet!")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Email exists!",
+		"data": fiber.Map{
+			"user": user,
+		},
+	})
 
 }
