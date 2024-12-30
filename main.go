@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/yebology/giggle-backend/database"
-	"github.com/yebology/giggle-backend/middleware"
 	"github.com/yebology/giggle-backend/router"
 )
 
@@ -21,8 +20,6 @@ func main() {
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
-
-	app.Use(middleware.AuthMiddleware)
 
 	router.SetUp(app)
 

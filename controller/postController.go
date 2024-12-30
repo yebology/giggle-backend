@@ -21,13 +21,13 @@ func GetPost(c *fiber.Ctx) error {
 	collection := database.GetDatabase().Collection("post")
 	cursor, err := collection.Find(ctx, bson.M{})
 	if err != nil {
-		return errors.GetError(c, err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 	defer cursor.Close(ctx)
 
 	err = cursor.All(ctx, &posts)
 	if err != nil {
-		return errors.GetError(c, err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

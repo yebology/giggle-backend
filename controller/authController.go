@@ -21,12 +21,12 @@ func Register(c *fiber.Ctx) error {
 	var user model.User
 	err := c.BodyParser(&user)
 	if err != nil {
-		return errors.GetError(c, err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest ,err.Error())
 	}
 
 	hashedPassword, err := helper.HashPassword(user.Password)
 	if err != nil {
-		return errors.GetError(c, "Error while hashing password!")
+		return errors.GetError(c, fiber.StatusBadRequest, "Error while hashing password!")
 	}
 	user.Password = string(hashedPassword)
 
@@ -41,17 +41,17 @@ func Register(c *fiber.Ctx) error {
 	var existingUser model.User
 	err = collection.FindOne(ctx, filter).Decode(&existingUser)
 	if err == nil {
-		return errors.GetError(c, "Email or username is already taken!")
+		return errors.GetError(c, fiber.StatusBadRequest, "Email or username is already taken!")
 	}
 
 	_, err = collection.InsertOne(ctx, user)
 	if err != nil {
-		return errors.GetError(c, err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	user, err = helper.GetUser(ctx, bson.M{"email": user.Email})
 	if err != nil {
-		return errors.GetError(c, err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -71,12 +71,12 @@ func Login(c *fiber.Ctx) error {
 	var login data.Login
 	err := c.BodyParser(&login)
 	if err != nil {
-		return errors.GetError(c, err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	hashedPassword, err := helper.HashPassword(login.Password)
 	if err != nil {
-		return errors.GetError(c, "Error while hashing password")
+		return errors.GetError(c, fiber.StatusBadRequest, "Error while hashing password")
 	}
 	login.Password = hashedPassword
 
@@ -88,7 +88,7 @@ func Login(c *fiber.Ctx) error {
 		},
 	})
 	if err != nil {
-		return errors.GetError(c, "Invalid email or password!")
+		return errors.GetError(c, fiber.StatusBadRequest, "Invalid email or password!")
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -108,7 +108,7 @@ func CheckAccount(c *fiber.Ctx) error {
 	var emailAccount data.EmailAccount
 	err := c.BodyParser(&emailAccount)
 	if err != nil {
-		return errors.GetError(c,err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	collection := database.GetDatabase().Collection("user")
@@ -117,7 +117,7 @@ func CheckAccount(c *fiber.Ctx) error {
 	var user model.User
 	err = collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
-		return errors.GetError(c, "Email hasn't registered yet!")
+		return errors.GetError(c, fiber.StatusBadRequest, "Email hasn't registered yet!")
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

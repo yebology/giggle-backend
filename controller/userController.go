@@ -20,13 +20,13 @@ func CreatePost(c *fiber.Ctx) error {
 	var post model.Post
 	err := c.BodyParser(&post)
 	if err != nil {
-		return errors.GetError(c, err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	collection := database.GetDatabase().Collection("post")
 	_, err = collection.InsertOne(ctx, post)
 	if err != nil {
-		return errors.GetError(c, err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -46,13 +46,13 @@ func UpdatePost(c *fiber.Ctx) error {
 	id := c.Params("id")
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return errors.GetError(c, err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	var post model.Post
 	err = c.BodyParser(&post)
 	if err != nil {
-		return errors.GetError(c, err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	collection := database.GetDatabase().Collection("post")
@@ -61,7 +61,7 @@ func UpdatePost(c *fiber.Ctx) error {
 
 	_, err = collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return errors.GetError(c, err.Error())
+		return errors.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
