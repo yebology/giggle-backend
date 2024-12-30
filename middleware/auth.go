@@ -1,15 +1,21 @@
 package middleware
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/output"
-	"github.com/yebology/giggle-backend/model/constant"
 )
 
 func UserMiddleware(c *fiber.Ctx) error {
 
-	role := GetRoleFromContext(c)
-	if role != string(constant.User) {
+	claims, err := ParseToken(c)
+	if err != nil {
+		return output.GetError(c, fiber.StatusUnauthorized, "Invalid token!")
+	}
+
+	var expectedRole = "user"
+	role, ok := claims["role"].(string)
+	if role != expectedRole || !ok {
 		return output.GetError(c, fiber.StatusForbidden, "Permission denied! Must register or login first!")
 	}
 
@@ -17,8 +23,22 @@ func UserMiddleware(c *fiber.Ctx) error {
 
 }
 
-func GetRoleFromContext(c *fiber.Ctx) string {
-	
-	return ""
+func ParseToken(c *fiber.Ctx) (jwt.MapClaims, error) {
+
+	token := c.Get("Authorization")
+
+	claims := jwt.MapClaims{}
+	parsedToken, err := jwt.ParseWithClaims(token, claims, GetSecretKey)
+	if err != nil || !parsedToken.Valid {
+		return nil, err
+	}
+
+	return claims, nil
+
+}
+
+func GetSecretKey(token *jwt.Token) (interface{}, error) {
+
+	return []byte("secret-key"), nil
 
 }
