@@ -1,6 +1,9 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/yebology/giggle-backend/model/constant"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type User struct {
 
@@ -8,5 +11,6 @@ type User struct {
 	Username 	string 					`json:"username"`
 	Email 		string 					`json:"email"`
 	Password 	string 					`json:"password"`
-	
+	Role		constant.Role			`json:"role"`
+
 }
