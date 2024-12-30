@@ -7,9 +7,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/controller/helper"
 	"github.com/yebology/giggle-backend/database"
-	"github.com/yebology/giggle-backend/output"
 	"github.com/yebology/giggle-backend/model"
 	"github.com/yebology/giggle-backend/model/data"
+	"github.com/yebology/giggle-backend/output"
+	"github.com/yebology/giggle-backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -54,11 +55,17 @@ func Register(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
+	token, err := utils.GenerateJWT(user)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, "Error while generating token access!")
+	}
+
 	return output.GetSuccess(c, fiber.Map{
 		"message": "Register account successful!",
 		"data": fiber.Map{
 			"user": user,
 		},
+		"token": token,
 	})
 
 }
@@ -91,11 +98,17 @@ func Login(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, "Invalid email or password!")
 	}
 
+	token, err := utils.GenerateJWT(user)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, "Error while generating token access!")
+	}
+
 	return output.GetSuccess(c, fiber.Map{
 		"message": "Login successful!",
 		"data": fiber.Map{
 			"user": user,
 		},
+		"token": token,
 	})
 
 }
@@ -120,11 +133,17 @@ func CheckAccount(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, "Email hasn't registered yet!")
 	}
 
+	token, err := utils.GenerateJWT(user)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, "Error while generating token access!")
+	}
+
 	return output.GetSuccess(c, fiber.Map{
 		"message": "Email exists!",
 		"data": fiber.Map{
 			"user": user,
 		},
+		"token": token,
 	})
 
 }

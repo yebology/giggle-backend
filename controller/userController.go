@@ -136,7 +136,7 @@ func InviteMemberToGroup(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	groupMemberIds := append(*group.GroupMemberIds, invitation.MemberId)
+	groupMemberIds := append(group.GroupMemberIds, invitation.MemberId)
 	update := bson.M{
 		"$set": bson.M{
 			"_groupMemberIds": groupMemberIds,
