@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/yebology/giggle-backend/constant"
 	"github.com/yebology/giggle-backend/controller/helper"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/global"
 	"github.com/yebology/giggle-backend/model"
-	"github.com/yebology/giggle-backend/model/constant"
 	"github.com/yebology/giggle-backend/model/data"
 	"github.com/yebology/giggle-backend/output"
 	"github.com/yebology/giggle-backend/utils"

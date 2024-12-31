@@ -8,3 +8,7 @@ const (
 	Guest Role = "guest"
 	
 )
+
+var AllowedRole = []Role{
+	User, Guest,
+}

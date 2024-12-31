@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/yebology/giggle-backend/constant"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/model"
-	"github.com/yebology/giggle-backend/model/constant"
 	"github.com/yebology/giggle-backend/model/data"
 	"github.com/yebology/giggle-backend/output"
 	"go.mongodb.org/mongo-driver/bson"
@@ -71,6 +71,15 @@ func UpdatePost(c *fiber.Ctx) error {
 		"data": fiber.Map{
 			"post": post,
 		},
+	})
+
+}
+
+func DeletePost(c *fiber.Ctx) error {
+
+	return output.GetSuccess(c, fiber.Map{
+		"message": "Succesfully deleted a post!",
+		"data": "",
 	})
 
 }

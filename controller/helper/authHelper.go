@@ -16,7 +16,7 @@ func CheckUser(ctx context.Context, filter bson.M) (model.User, error) {
 
 	err := collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
-		return model.User{}, err
+		return model.User{},err
 	}
 
 	return user, nil

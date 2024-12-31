@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/yebology/giggle-backend/constant"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/model"
-	"github.com/yebology/giggle-backend/model/constant"
 	"github.com/yebology/giggle-backend/output"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -32,7 +32,7 @@ func GetPost(c *fiber.Ctx) error {
 	}
 
 	return output.GetSuccess(c, fiber.Map{
-		"message": "Successfully fetch post!",
+		"message": "Successfully fetch all post!",
 		"data": fiber.Map{
 			"posts": posts,
 		},
