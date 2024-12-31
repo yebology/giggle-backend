@@ -8,6 +8,7 @@ import (
 	"github.com/yebology/giggle-backend/controller/helper"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/model"
+	"github.com/yebology/giggle-backend/model/constant"
 	"github.com/yebology/giggle-backend/model/data"
 	"github.com/yebology/giggle-backend/output"
 	"github.com/yebology/giggle-backend/utils"
@@ -22,12 +23,12 @@ func Register(c *fiber.Ctx) error {
 	var user model.User
 	err := c.BodyParser(&user)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest ,err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
 	hashedPassword, err := helper.HashPassword(user.Password)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, "Error while hashing password!")
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToHashPassword))
 	}
 	user.Password = string(hashedPassword)
 
@@ -42,22 +43,22 @@ func Register(c *fiber.Ctx) error {
 	var existingUser model.User
 	err = collection.FindOne(ctx, filter).Decode(&existingUser)
 	if err == nil {
-		return output.GetError(c, fiber.StatusBadRequest, "Email or username is already taken!")
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.DuplicateDataError))
 	}
 
 	_, err = collection.InsertOne(ctx, user)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToInsertData))
 	}
 
 	user, err = helper.GetUser(ctx, bson.M{"email": user.Email})
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToLoadUserData))
 	}
 
 	token, err := utils.GenerateJWT(user)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, "Error while generating token access!")
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToGenerateTokenAccess))
 	}
 
 	return output.GetSuccess(c, fiber.Map{
@@ -78,12 +79,12 @@ func Login(c *fiber.Ctx) error {
 	var login data.Login
 	err := c.BodyParser(&login)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
 	hashedPassword, err := helper.HashPassword(login.Password)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, "Error while hashing password")
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToHashPassword))
 	}
 	login.Password = hashedPassword
 
@@ -95,12 +96,12 @@ func Login(c *fiber.Ctx) error {
 		},
 	})
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, "Invalid email or password!")
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidAccountError))
 	}
 
 	token, err := utils.GenerateJWT(user)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, "Error while generating token access!")
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToGenerateTokenAccess))
 	}
 
 	return output.GetSuccess(c, fiber.Map{
@@ -121,7 +122,7 @@ func CheckAccount(c *fiber.Ctx) error {
 	var account data.Account
 	err := c.BodyParser(&account)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
 	collection := database.GetDatabase().Collection("user")
@@ -130,12 +131,12 @@ func CheckAccount(c *fiber.Ctx) error {
 	var user model.User
 	err = collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, "Email hasn't registered yet!")
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.UnregisteredAccountError))
 	}
 
 	token, err := utils.GenerateJWT(user)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, "Error while generating token access!")
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToGenerateTokenAccess))
 	}
 
 	return output.GetSuccess(c, fiber.Map{

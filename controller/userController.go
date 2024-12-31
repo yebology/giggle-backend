@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/model"
+	"github.com/yebology/giggle-backend/model/constant"
 	"github.com/yebology/giggle-backend/model/data"
 	"github.com/yebology/giggle-backend/output"
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,13 +22,13 @@ func CreatePost(c *fiber.Ctx) error {
 	var post model.Post
 	err := c.BodyParser(&post)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
 	collection := database.GetDatabase().Collection("post")
 	_, err = collection.InsertOne(ctx, post)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToInsertData))
 	}
 
 	return output.GetSuccess(c, fiber.Map{
@@ -47,13 +48,13 @@ func UpdatePost(c *fiber.Ctx) error {
 	id := c.Params("id")
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
 	}
 
 	var post model.Post
 	err = c.BodyParser(&post)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
 	collection := database.GetDatabase().Collection("post")
@@ -62,7 +63,7 @@ func UpdatePost(c *fiber.Ctx) error {
 
 	_, err = collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToUpdateData))
 	}
 
 	return output.GetSuccess(c, fiber.Map{
@@ -82,18 +83,18 @@ func CreateGroup(c *fiber.Ctx) error {
 	var group model.Group
 	err := c.BodyParser(&group)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
 	_, err = primitive.ObjectIDFromHex(group.GroupOwnerId.Hex())
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
 	}
 
 	collection := database.GetDatabase().Collection("group")
 	_, err = collection.InsertOne(ctx, group)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToInsertData))
 	}
 
 	return output.GetSuccess(c, fiber.Map{
@@ -113,18 +114,18 @@ func InviteMemberToGroup(c *fiber.Ctx) error {
 	id := c.Params("id")
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
 	}
 
 	var invitation data.Invitation
 	err = c.BodyParser(&invitation)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
 	_, err = primitive.ObjectIDFromHex(invitation.MemberId.Hex())
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
 	}
 
 	var group model.Group
@@ -133,7 +134,7 @@ func InviteMemberToGroup(c *fiber.Ctx) error {
 	collection := database.GetDatabase().Collection("group")
 	err = collection.FindOne(ctx, filter).Decode(&group)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToDecodeData))
 	}
 
 	groupMemberIds := append(group.GroupMemberIds, invitation.MemberId)
@@ -145,7 +146,7 @@ func InviteMemberToGroup(c *fiber.Ctx) error {
 
 	_, err = collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, err.Error())
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToUpdateData))
 	}
 
 	return output.GetSuccess(c, fiber.Map{
