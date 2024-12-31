@@ -20,7 +20,7 @@ func SetUp(app *fiber.App) {
 	app.Delete("/api/delete_post/:id", middleware.UserMiddleware, middleware.PostOwnerMiddleware, controller.DeletePost)
 
 	// 
-	app.Get("/api/get_group/:user_id", middleware.UserMiddleware, controller.GetGroup)
+	app.Get("/api/get_group/:user_id", middleware.UserMiddleware, controller.GetUserGroups)
 	app.Post("/api/create_group", middleware.UserMiddleware, controller.CreateGroup)
 	app.Patch("/api/invite_member_to_group/:id", middleware.UserMiddleware, controller.InviteMemberToGroup)
 

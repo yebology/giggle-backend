@@ -32,7 +32,7 @@ func CreatePost(c *fiber.Ctx) error {
 	}
 
 	return output.GetSuccess(c, fiber.Map{
-		"message": "Successfully create a new post!",
+		"message": "Successfully created a new post!",
 		"data": fiber.Map{
 			"post": post,
 		},
@@ -67,7 +67,7 @@ func UpdatePost(c *fiber.Ctx) error {
 	}
 
 	return output.GetSuccess(c, fiber.Map{
-		"message": "Successfully update a post!",
+		"message": "Successfully updated a post!",
 		"data": fiber.Map{
 			"post": post,
 		},
@@ -124,7 +124,7 @@ func CreateGroup(c *fiber.Ctx) error {
 	}
 
 	return output.GetSuccess(c, fiber.Map{
-		"message": "Successfully create a new group!",
+		"message": "Successfully created a new group!",
 		"data": fiber.Map{
 			"group": group,
 		},
@@ -176,9 +176,44 @@ func InviteMemberToGroup(c *fiber.Ctx) error {
 	}
 
 	return output.GetSuccess(c, fiber.Map{
-		"message": "Successfully invite new member!",
+		"message": "Successfully invited new member!",
 		"data": fiber.Map{
 			"group": group,
+		},
+	})
+
+}
+
+func GetUserGroups(c *fiber.Ctx) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	id := c.Params("user_id")
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
+	}
+
+	var groups []model.Group
+	collection := database.GetDatabase().Collection("group")
+	filter := bson.M{"groupOwnerId": objectId}
+
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToRetrieveData))
+	}
+	defer cursor.Close(ctx)
+
+	err = cursor.All(ctx, &groups)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToDecodeData))
+	}
+
+	return output.GetSuccess(c, fiber.Map{
+		"message": "Successfully fetched user groups!",
+		"data": fiber.Map{
+			"groups": groups,
 		},
 	})
 

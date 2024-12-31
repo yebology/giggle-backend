@@ -32,7 +32,7 @@ func GetPost(c *fiber.Ctx) error {
 	}
 
 	return output.GetSuccess(c, fiber.Map{
-		"message": "Successfully fetch all post!",
+		"message": "Successfully fetched all post!",
 		"data": fiber.Map{
 			"posts": posts,
 		},
