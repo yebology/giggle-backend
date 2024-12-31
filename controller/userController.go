@@ -77,6 +77,23 @@ func UpdatePost(c *fiber.Ctx) error {
 
 func DeletePost(c *fiber.Ctx) error {
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	id := c.Params("id")
+	objectId, err := primitive.ObjectIDFromHex(id) 
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
+	}
+
+	collection := database.GetDatabase().Collection("post")
+	filter := bson.M{"_id": objectId}
+
+	_, err = collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToDeleteData))
+	}
+
 	return output.GetSuccess(c, fiber.Map{
 		"message": "Succesfully deleted a post!",
 		"data": "",
