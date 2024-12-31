@@ -20,7 +20,7 @@ func GetDatabase() *mongo.Database {
 
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatalf("Failed to load from .env!")
+		log.Fatalf("Failed to load from .env: %s", err)
 	}
 
 	DB_NAME := os.Getenv("DB_NAME")
@@ -33,7 +33,7 @@ func ConnectDatabase() {
 
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatalf("Failed to load from .env!")
+		log.Fatalf("Failed to load from .env: %s", err)
 	}
 
 	MONGO_URI := os.Getenv("MONGO_URI")
@@ -41,13 +41,13 @@ func ConnectDatabase() {
 	clientOption := options.Client().ApplyURI(MONGO_URI)
 	client, err := mongo.Connect(context.Background(), clientOption)
 	if err != nil {
-		log.Fatalf("Error while connecting to MongoDB!")
+		log.Fatalf("Error while connecting to MongoDB: %s", err)
 	}
 	Client = client
 
 	err = Client.Ping(context.Background(), nil)
 	if err != nil {
-		log.Fatalf("Error while ping to MongoDB!")
+		log.Fatalf("Error while ping to MongoDB: %s", err)
 	}
 
 	log.Println("Successfully connected to MongoDB!")
@@ -62,7 +62,7 @@ func DisconnectDatabase() {
 
 	err := Client.Disconnect(context.Background())
 	if err != nil {
-		log.Fatalf("Error while disconnecting from MongoDB!")
+		log.Fatalf("Error while disconnecting from MongoDB: %s", err)
 	}
 
 	log.Println("Successfully disconnected from MongoDB!")

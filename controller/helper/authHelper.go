@@ -9,23 +9,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func GetUser(ctx context.Context, filter bson.M) (model.User, error) {
+func CheckUser(ctx context.Context, filter bson.M) (model.User, error) {
 
 	var user model.User
 	collection := database.GetDatabase().Collection("user")
-	
-	cursor, err := collection.Find(ctx, filter)
-	if err != nil {
-		return model.User{}, err
-	}
-	defer cursor.Close(ctx)
 
-	success := cursor.Next(ctx)
-	if !success {
-		return model.User{}, err
-	}
-
-	err = cursor.Decode(&user)
+	err := collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		return model.User{}, err
 	}
@@ -42,5 +31,11 @@ func HashPassword(password string) (string, error) {
 	}
 
 	return string(hashedPassword), nil
+
+}
+
+func CheckPassword(hashedPassword string, password string) error {
+
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))	
 
 }

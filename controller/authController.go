@@ -46,8 +46,7 @@ func Register(c *fiber.Ctx) error {
 		},
 	}
 
-	var existingUser model.User
-	err = collection.FindOne(ctx, filter).Decode(&existingUser)
+	_, err = helper.CheckUser(ctx, filter)
 	if err == nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.DuplicateDataError))
 	}
@@ -57,7 +56,7 @@ func Register(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToInsertData))
 	}
 
-	user, err = helper.GetUser(ctx, bson.M{"email": user.Email})
+	user, err = helper.CheckUser(ctx, filter)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToLoadUserData))
 	}
@@ -88,19 +87,24 @@ func Login(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
-	hashedPassword, err := helper.HashPassword(login.Password)
+	err = global.Validate.Struct(login)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToHashPassword))
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
-	login.Password = hashedPassword
 
-	var user model.User
-	user, err = helper.GetUser(ctx, bson.M{
-		"$and": []bson.M{
-			{"email": login.Email},
-			{"password": login.Password},
+	filter := bson.M{
+		"$or": []bson.M{
+			{"email": login.UserIdentifier},
+			{"username": login.UserIdentifier},
 		},
-	})
+	}
+
+	user, err := helper.CheckUser(ctx, filter)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidAccountError))
+	}
+
+	err = helper.CheckPassword(user.Password, login.Password)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidAccountError))
 	}
@@ -131,11 +135,14 @@ func CheckAccount(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
-	collection := database.GetDatabase().Collection("user")
+	err = global.Validate.Struct(account)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
+	}
+
 	filter := bson.M{"email": account.Email}
 
-	var user model.User
-	err = collection.FindOne(ctx, filter).Decode(&user)
+	user, err := helper.CheckUser(ctx, filter)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.UnregisteredAccountError))
 	}

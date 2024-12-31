@@ -2,7 +2,7 @@ package data
 
 type Login struct {
 
-	Email 		string 		`json:"email"`
-	Password 	string 		`json:"password"`
+	UserIdentifier 		string 		`json:"userIdentifier" validate:"required,min=8"`
+	Password 			string 		`json:"password" validate:"required,min=8"`
 
 }
