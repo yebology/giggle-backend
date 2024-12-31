@@ -17,5 +17,6 @@ const (
 	UnregisteredAccountError Error = "This email address is not registered. Please check your email or sign up!"
 	InvalidAccountError Error = "The email or password you entered is incorrect. Please try again!"
 	InvalidIdError Error = "The ID you provided is not valid. Please check and try again!"
+	ValidationError Error = "Input Does Not Meet Requirements. Please check and try again!"
 
 )

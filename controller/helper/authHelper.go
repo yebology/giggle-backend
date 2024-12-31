@@ -20,6 +20,16 @@ func GetUser(ctx context.Context, filter bson.M) (model.User, error) {
 	}
 	defer cursor.Close(ctx)
 
+	success := cursor.Next(ctx)
+	if !success {
+		return model.User{}, err
+	}
+
+	err = cursor.Decode(&user)
+	if err != nil {
+		return model.User{}, err
+	}
+
 	return user, nil
 
 }

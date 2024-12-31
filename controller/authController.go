@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/controller/helper"
 	"github.com/yebology/giggle-backend/database"
+	"github.com/yebology/giggle-backend/global"
 	"github.com/yebology/giggle-backend/model"
 	"github.com/yebology/giggle-backend/model/constant"
 	"github.com/yebology/giggle-backend/model/data"
@@ -24,6 +25,11 @@ func Register(c *fiber.Ctx) error {
 	err := c.BodyParser(&user)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
+	}
+
+	err = global.Validate.Struct(user)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
 
 	hashedPassword, err := helper.HashPassword(user.Password)

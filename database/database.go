@@ -36,7 +36,7 @@ func ConnectDatabase() {
 		log.Fatalf("Failed to load from .env!")
 	}
 
-	MONGO_URI := os.Getenv(".env")
+	MONGO_URI := os.Getenv("MONGO_URI")
 
 	clientOption := options.Client().ApplyURI(MONGO_URI)
 	client, err := mongo.Connect(context.Background(), clientOption)
