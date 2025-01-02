@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/constant"
 	"github.com/yebology/giggle-backend/database"
+	"github.com/yebology/giggle-backend/global"
 	"github.com/yebology/giggle-backend/model"
 	"github.com/yebology/giggle-backend/model/data"
 	"github.com/yebology/giggle-backend/output"
@@ -25,6 +26,11 @@ func CreateGroup(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
+	err = global.GetValidator().Struct(group)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
+	}
+
 	_, err = primitive.ObjectIDFromHex(group.GroupOwnerId.Hex())
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
@@ -38,9 +44,7 @@ func CreateGroup(c *fiber.Ctx) error {
 
 	return output.GetSuccess(c, fiber.Map{
 		"message": "Successfully created a new group!",
-		"data": fiber.Map{
-			"group": group,
-		},
+		"data": "",
 	})
 
 }
@@ -60,6 +64,11 @@ func InviteMember(c *fiber.Ctx) error {
 	err = c.BodyParser(&invitation)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
+	}
+
+	err = global.GetValidator().Struct(invitation)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
 
 	_, err = primitive.ObjectIDFromHex(invitation.MemberId.Hex())
@@ -90,9 +99,7 @@ func InviteMember(c *fiber.Ctx) error {
 
 	return output.GetSuccess(c, fiber.Map{
 		"message": "Successfully invited new member!",
-		"data": fiber.Map{
-			"group": group,
-		},
+		"data": "",
 	})
 
 }
@@ -110,7 +117,7 @@ func GetUserGroups(c *fiber.Ctx) error {
 
 	var groups []model.Group
 	collection := database.GetDatabase().Collection("group")
-	filter := bson.M{"groupOwnerId": objectId}
+	filter := bson.M{"_groupOwnerId": objectId}
 
 	cursor, err := collection.Find(ctx, filter)
 	if err != nil {

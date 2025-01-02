@@ -19,8 +19,8 @@ const (
 	InvalidAccountError Error = "The email or password you entered is incorrect. Please try again!"
 	InvalidIdError Error = "The ID you provided is not valid. Please check and try again!"
 	ValidationError Error = "Input does not meet requirements. Please check and try again!"
-	HirePostError Error = "Hire post must specify at least one required talent!"
 	InvalidTokenError Error = "Invalid token!"
 	PermissionDeniedError Error = "Access denied! You do not have permission to access this data!"
+	DataUnavailableError Error = "Data is currently unavailable! Please try again later!"
 
 )

@@ -30,12 +30,8 @@ func CreatePost(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
 
-	if post.PostType == "Hire" && post.RequiredTalent == 0 {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.HirePostError))
-	}
-
-	if post.PostType == "Service" && post.RequiredTalent > 0 {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.HirePostError))
+	if (post.PostType == "Hire" && post.RequiredTalent == 0) || (post.PostType == "Service" && post.RequiredTalent > 0) {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
 
 	objectId, err := primitive.ObjectIDFromHex(post.PostCreatorId.Hex())
@@ -52,9 +48,7 @@ func CreatePost(c *fiber.Ctx) error {
 
 	return output.GetSuccess(c, fiber.Map{
 		"message": "Successfully created a new post!",
-		"data": fiber.Map{
-			"post": post,
-		},
+		"data": "",
 	})
 
 }
@@ -92,9 +86,7 @@ func UpdatePost(c *fiber.Ctx) error {
 
 	return output.GetSuccess(c, fiber.Map{
 		"message": "Successfully updated a post!",
-		"data": fiber.Map{
-			"post": post,
-		},
+		"data": "",
 	})
 
 }

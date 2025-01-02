@@ -19,9 +19,9 @@ func SetUp(app *fiber.App) {
 	app.Patch("/api/update_post/:id", middleware.UserMiddleware, middleware.PostOwnerMiddleware, controller.UpdatePost)
 	app.Delete("/api/delete_post/:id", middleware.UserMiddleware, middleware.PostOwnerMiddleware, controller.DeletePost)
 
-	// 
+	// done check postman
 	app.Get("/api/get_groups/:user_id", middleware.UserMiddleware, controller.GetUserGroups)
 	app.Post("/api/create_group", middleware.UserMiddleware, controller.CreateGroup)
-	app.Patch("/api/invite_member_to_group/:id", middleware.UserMiddleware, controller.InviteMember)
+	app.Patch("/api/invite_member_to_group/:id", middleware.UserMiddleware, middleware.GroupOwnerMiddleware, controller.InviteMember)
 
 }

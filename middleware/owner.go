@@ -36,7 +36,7 @@ func PostOwnerMiddleware(c *fiber.Ctx) error {
 	var post model.Post
 	err = collection.FindOne(ctx, filter).Decode(&post)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToRetrieveData))
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.DataUnavailableError))
 	}
 
 	postCreatorId := post.PostCreatorId.Hex()
@@ -44,6 +44,42 @@ func PostOwnerMiddleware(c *fiber.Ctx) error {
 	userId, ok := claims["id"].(string)
 	if !ok || userId != postCreatorId {
 		return output.GetError(c, fiber.StatusForbidden, string(constant.PermissionDeniedError))
+	}
+
+	return c.Next()
+
+}
+
+func GroupOwnerMiddleware(c *fiber.Ctx) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	claims, err := helper.ParseToken(c)
+	if err != nil {
+		return output.GetError(c, fiber.StatusUnauthorized, string(constant.InvalidTokenError))
+	}
+
+	id := c.Params("id")
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
+	}
+
+	collection := database.GetDatabase().Collection("group")
+	filter := bson.M{"_id": objectId}
+
+	var group model.Group
+	err = collection.FindOne(ctx, filter).Decode(&group)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.DataUnavailableError))
+	}
+
+	groupOwnerId := group.GroupOwnerId.Hex()
+
+	userId, ok := claims["id"].(string)
+	if userId != groupOwnerId || !ok {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.PermissionDeniedError))
 	}
 
 	return c.Next()
