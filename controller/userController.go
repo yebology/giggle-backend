@@ -6,231 +6,158 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/constant"
+	"github.com/yebology/giggle-backend/controller/helper"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/global"
 	"github.com/yebology/giggle-backend/model"
 	"github.com/yebology/giggle-backend/model/data"
 	"github.com/yebology/giggle-backend/output"
+	"github.com/yebology/giggle-backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CreatePost(c *fiber.Ctx) error {
+func Register(c *fiber.Ctx) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var post model.Post
-	err := c.BodyParser(&post)
+	var user model.User
+	err := c.BodyParser(&user)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
-	err = global.GetValidator().Struct(post)
+	err = global.GetValidator().Struct(user)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
 
-	if post.PostType == "Hire" && post.RequiredTalent == 0 {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.HirePostError))
-	}
-
-	objectId, err := primitive.ObjectIDFromHex(post.PostCreatorId.Hex())
+	hashedPassword, err := helper.HashPassword(user.Password)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToHashPassword))
 	}
-	post.PostCreatorId = objectId
+	user.Password = string(hashedPassword)
 
-	collection := database.GetDatabase().Collection("post")
-	_, err = collection.InsertOne(ctx, post)
+	collection := database.GetDatabase().Collection("user")
+	filter := bson.M{
+		"$or": []bson.M{
+			{"email": user.Email},
+			{"username": user.Username},
+		},
+	}
+
+	_, err = helper.CheckUser(ctx, filter)
+	if err == nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.DuplicateDataError))
+	}
+
+	_, err = collection.InsertOne(ctx, user)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToInsertData))
 	}
 
+	user, err = helper.CheckUser(ctx, filter)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToLoadUserData))
+	}
+
+	token, err := utils.GenerateJWT(user)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToGenerateTokenAccess))
+	}
+
 	return output.GetSuccess(c, fiber.Map{
-		"message": "Successfully created a new post!",
+		"message": "Register account successful!",
 		"data": fiber.Map{
-			"post": post,
+			"user": user,
 		},
+		"token": token,
 	})
 
 }
 
-func UpdatePost(c *fiber.Ctx) error {
+func Login(c *fiber.Ctx) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	id := c.Params("id")
-	objectId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
-	}
-
-	var post model.Post
-	err = c.BodyParser(&post)
+	var login data.Login
+	err := c.BodyParser(&login)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
-	collection := database.GetDatabase().Collection("post")
-	filter := bson.M{"_id": objectId}
-	update := bson.M{"$set": post}
-
-	_, err = collection.UpdateOne(ctx, filter, update)
+	err = global.GetValidator().Struct(login)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToUpdateData))
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
 
-	return output.GetSuccess(c, fiber.Map{
-		"message": "Successfully updated a post!",
-		"data": fiber.Map{
-			"post": post,
+	filter := bson.M{
+		"$or": []bson.M{
+			{"email": login.UserIdentifier},
+			{"username": login.UserIdentifier},
 		},
-	})
-
-}
-
-func DeletePost(c *fiber.Ctx) error {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	id := c.Params("id")
-	objectId, err := primitive.ObjectIDFromHex(id) 
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
 	}
 
-	collection := database.GetDatabase().Collection("post")
-	filter := bson.M{"_id": objectId}
-
-	_, err = collection.DeleteOne(ctx, filter)
+	user, err := helper.CheckUser(ctx, filter)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToDeleteData))
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidAccountError))
+	}
+
+	err = helper.CheckPassword(user.Password, login.Password)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidAccountError))
+	}
+
+	token, err := utils.GenerateJWT(user)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToGenerateTokenAccess))
 	}
 
 	return output.GetSuccess(c, fiber.Map{
-		"message": "Succesfully deleted a post!",
-		"data": "",
+		"message": "Login successful!",
+		"data": fiber.Map{
+			"user": user,
+		},
+		"token": token,
 	})
 
 }
 
-func CreateGroup(c *fiber.Ctx) error {
+func CheckAccount(c *fiber.Ctx) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var group model.Group
-	err := c.BodyParser(&group)
+	var account data.Account
+	err := c.BodyParser(&account)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
-	_, err = primitive.ObjectIDFromHex(group.GroupOwnerId.Hex())
+	err = global.Validate.Struct(account)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
 
-	collection := database.GetDatabase().Collection("group")
-	_, err = collection.InsertOne(ctx, group)
+	filter := bson.M{"email": account.Email}
+
+	user, err := helper.CheckUser(ctx, filter)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToInsertData))
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.UnregisteredAccountError))
+	}
+
+	token, err := utils.GenerateJWT(user)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToGenerateTokenAccess))
 	}
 
 	return output.GetSuccess(c, fiber.Map{
-		"message": "Successfully created a new group!",
+		"message": "Email exists!",
 		"data": fiber.Map{
-			"group": group,
+			"user": user,
 		},
-	})
-
-}
-
-func InviteMemberToGroup(c *fiber.Ctx) error {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	id := c.Params("id")
-	objectId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
-	}
-
-	var invitation data.Invitation
-	err = c.BodyParser(&invitation)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
-	}
-
-	_, err = primitive.ObjectIDFromHex(invitation.MemberId.Hex())
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
-	}
-
-	var group model.Group
-	filter := bson.M{"_id": objectId}
-
-	collection := database.GetDatabase().Collection("group")
-	err = collection.FindOne(ctx, filter).Decode(&group)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToDecodeData))
-	}
-
-	groupMemberIds := append(group.GroupMemberIds, invitation.MemberId)
-	update := bson.M{
-		"$set": bson.M{
-			"_groupMemberIds": groupMemberIds,
-		},
-	}
-
-	_, err = collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToUpdateData))
-	}
-
-	return output.GetSuccess(c, fiber.Map{
-		"message": "Successfully invited new member!",
-		"data": fiber.Map{
-			"group": group,
-		},
-	})
-
-}
-
-func GetUserGroups(c *fiber.Ctx) error {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	id := c.Params("user_id")
-	objectId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
-	}
-
-	var groups []model.Group
-	collection := database.GetDatabase().Collection("group")
-	filter := bson.M{"groupOwnerId": objectId}
-
-	cursor, err := collection.Find(ctx, filter)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToRetrieveData))
-	}
-	defer cursor.Close(ctx)
-
-	err = cursor.All(ctx, &groups)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToDecodeData))
-	}
-
-	return output.GetSuccess(c, fiber.Map{
-		"message": "Successfully fetched user groups!",
-		"data": fiber.Map{
-			"groups": groups,
-		},
+		"token": token,
 	})
 
 }
