@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/constant"
 	"github.com/yebology/giggle-backend/database"
+	"github.com/yebology/giggle-backend/global"
 	"github.com/yebology/giggle-backend/model"
 	"github.com/yebology/giggle-backend/model/data"
 	"github.com/yebology/giggle-backend/output"
@@ -24,6 +25,21 @@ func CreatePost(c *fiber.Ctx) error {
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
+
+	err = global.GetValidator().Struct(post)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
+	}
+
+	if post.PostType == "Hire" && post.RequiredTalent == 0 {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.HirePostError))
+	}
+
+	objectId, err := primitive.ObjectIDFromHex(post.PostCreatorId.Hex())
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
+	}
+	post.PostCreatorId = objectId
 
 	collection := database.GetDatabase().Collection("post")
 	_, err = collection.InsertOne(ctx, post)

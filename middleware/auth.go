@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"fmt"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/output"
@@ -29,7 +31,11 @@ func ParseToken(c *fiber.Ctx) (jwt.MapClaims, error) {
 
 	claims := jwt.MapClaims{}
 	parsedToken, err := jwt.ParseWithClaims(token, claims, GetSecretKey)
+	fmt.Println(claims)
+	fmt.Println(parsedToken)
 	if err != nil || !parsedToken.Valid {
+		fmt.Println(err)
+		fmt.Println(parsedToken.Valid)
 		return nil, err
 	}
 

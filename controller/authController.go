@@ -27,7 +27,7 @@ func Register(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
-	err = global.Validate.Struct(user)
+	err = global.GetValidator().Struct(user)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
@@ -87,7 +87,7 @@ func Login(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
 	}
 
-	err = global.Validate.Struct(login)
+	err = global.GetValidator().Struct(login)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
