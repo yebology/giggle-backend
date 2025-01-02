@@ -45,7 +45,7 @@ func CreateGroup(c *fiber.Ctx) error {
 
 }
 
-func InviteMemberToGroup(c *fiber.Ctx) error {
+func InviteMember(c *fiber.Ctx) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

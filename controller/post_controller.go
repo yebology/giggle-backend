@@ -34,6 +34,10 @@ func CreatePost(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.HirePostError))
 	}
 
+	if post.PostType == "Service" && post.RequiredTalent > 0 {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.HirePostError))
+	}
+
 	objectId, err := primitive.ObjectIDFromHex(post.PostCreatorId.Hex())
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
@@ -70,6 +74,11 @@ func UpdatePost(c *fiber.Ctx) error {
 	err = c.BodyParser(&post)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
+	}
+
+	err = global.GetValidator().Struct(post)
+	if err != nil {
+		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
 
 	collection := database.GetDatabase().Collection("post")
@@ -116,7 +125,7 @@ func DeletePost(c *fiber.Ctx) error {
 
 }
 
-func GetPost(c *fiber.Ctx) error {
+func GetPosts(c *fiber.Ctx) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
