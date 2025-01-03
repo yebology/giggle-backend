@@ -61,9 +61,9 @@ func Register(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToLoadUserData))
 	}
 
-	token, err := utils.GenerateJWT(user)
+	jwt, err := utils.GenerateJWT(user)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToGenerateTokenAccess))
+		return output.GetError(c, fiber.StatusInternalServerError, string(constant.FailedToGenerateTokenAccess))
 	}
 
 	return output.GetSuccess(c, fiber.Map{
@@ -71,7 +71,7 @@ func Register(c *fiber.Ctx) error {
 		"data": fiber.Map{
 			"user": user,
 		},
-		"token": token,
+		"token": jwt,
 	})
 
 }
@@ -109,9 +109,9 @@ func Login(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidAccountError))
 	}
 
-	token, err := utils.GenerateJWT(user)
+	jwt, err := utils.GenerateJWT(user)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToGenerateTokenAccess))
+		return output.GetError(c, fiber.StatusInternalServerError, string(constant.FailedToGenerateTokenAccess))
 	}
 
 	return output.GetSuccess(c, fiber.Map{
@@ -119,45 +119,7 @@ func Login(c *fiber.Ctx) error {
 		"data": fiber.Map{
 			"user": user,
 		},
-		"token": token,
-	})
-
-}
-
-func CheckAccount(c *fiber.Ctx) error {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	var account data.Account
-	err := c.BodyParser(&account)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
-	}
-
-	err = global.Validate.Struct(account)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
-	}
-
-	filter := bson.M{"email": account.Email}
-
-	user, err := helper.CheckUser(ctx, filter)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.UnregisteredAccountError))
-	}
-
-	token, err := utils.GenerateJWT(user)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToGenerateTokenAccess))
-	}
-
-	return output.GetSuccess(c, fiber.Map{
-		"message": "Email exists!",
-		"data": fiber.Map{
-			"user": user,
-		},
-		"token": token,
+		"token": jwt,
 	})
 
 }

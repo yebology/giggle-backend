@@ -2,16 +2,20 @@ package router
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/yebology/giggle-backend/oauth"
 	"github.com/yebology/giggle-backend/controller"
 	"github.com/yebology/giggle-backend/middleware"
 )
 
 func SetUp(app *fiber.App) {
 
+	// done check
+	app.Get("/oauth/google", oauth.GoogleAuth)
+	app.Get("/oauth/redirect", oauth.GoogleRedirect)
+
 	// done check postman
 	app.Post("/api/login", controller.Login)
 	app.Post("/api/register", controller.Register)
-	app.Post("/api/check_account", controller.CheckAccount)
 
 	// done check postman
 	app.Get("/api/get_posts", controller.GetPosts)
