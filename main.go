@@ -6,7 +6,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/yebology/giggle-backend/database"
-	"github.com/yebology/giggle-backend/router"
+	"github.com/yebology/giggle-backend/router/http"
+	"github.com/yebology/giggle-backend/router/ws"
 )
 
 func main() {
@@ -21,7 +22,9 @@ func main() {
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
-	router.SetUp(app)
+	http.SetUp(app)
+
+	ws.SetUp(app)
 
 	log.Fatal(app.Listen(":8080"))
 
