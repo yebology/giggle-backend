@@ -23,6 +23,7 @@ const (
 	ValidationError Error = "Your input doesn’t meet the requirements. Please check and try again!"
 	InvalidTokenError Error = "The token provided is invalid. Please try again!"
 	PermissionDeniedError Error = "Access denied! You don’t have permission to access this data."
-	DataUnavailableError Error = "This data is currently unavailable. Please try again later!"	
+	DataUnavailableError Error = "This data is currently unavailable. Please try again later!"
+	GreetingEmailError Error = "Unable to send greeting email due to an unexpected error."
 
 )

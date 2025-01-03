@@ -9,6 +9,7 @@ import (
 	"github.com/yebology/giggle-backend/controller/helper"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/global"
+	"github.com/yebology/giggle-backend/mail"
 	"github.com/yebology/giggle-backend/model"
 	"github.com/yebology/giggle-backend/model/data"
 	"github.com/yebology/giggle-backend/output"
@@ -64,6 +65,11 @@ func Register(c *fiber.Ctx) error {
 	jwt, err := utils.GenerateJWT(user)
 	if err != nil {
 		return output.GetError(c, fiber.StatusInternalServerError, string(constant.FailedToGenerateTokenAccess))
+	}
+
+	err = mail.SendGreetingEmail(user.Email, user.Username)
+	if err != nil {
+		return output.GetError(c, fiber.StatusInternalServerError, string(constant.GreetingEmailError))
 	}
 
 	return output.GetSuccess(c, fiber.Map{
