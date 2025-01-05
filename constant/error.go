@@ -15,6 +15,8 @@ const (
 	FailedToDecodeData Error = "We couldn’t process the data. Please try again!"
 	FailedToExchangeCodeWithToken Error = "Authentication couldn’t be completed. Please try again!"
 	FailedToGetCodeFromRedirectUrl Error = "We couldn’t retrieve the authorization code. Please try again!"
+	FailedToLoadMessage Error = "Failed to load your message. Please try again!"
+	FailedToSendMessage Error = "Failed to send your message. Check your connection and try again!"
 	
 	DuplicateDataError Error = "This username or email is already taken. Please choose another one!"
 	UnregisteredAccountError Error = "It seems like this email isn’t registered. Please sign up to continue!"
