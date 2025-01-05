@@ -68,13 +68,14 @@ func GoogleRedirect(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusInternalServerError, string(constant.FailedToDecodeData))
 	}
 
+	// Filter the 'User' by email then return the result.
 	filter := bson.M{"email": googleUser.Email}
-
 	user, err := helper.CheckUser(ctx, filter)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.UnregisteredAccountError))
 	}
 
+	// Generate JWT token to handle 'User' authorization.
 	jwt, err := utils.GenerateJWT(user)
 	if err != nil {
 		return output.GetError(c, fiber.StatusInternalServerError, string(constant.FailedToGenerateTokenAccess))
