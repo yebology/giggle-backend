@@ -1,15 +1,19 @@
 package controller
 
 import (
-	"fmt"
+	"context"
+	"log"
 
 	"github.com/gofiber/contrib/websocket"
+	"github.com/yebology/giggle-backend/controller/helper"
+	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/model/ws"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Hub struct {
 
-	Clients						map[string]*websocket.Conn
+	Clients						map[primitive.ObjectID]*websocket.Conn
 	ClientRegisterChannel		chan *websocket.Conn
 	ClientRemovalChannel		chan *websocket.Conn
 	BroadcastChat				chan ws.PersonalChat
@@ -23,15 +27,38 @@ func (h *Hub) Run() {
 		select {
 
 		case conn := <- h.ClientRegisterChannel:
+
 			senderId := conn.Query("senderId")
-			h.Clients[senderId] = conn
+
+			res, err := helper.ConvertToObjectId(senderId)
+			if err != nil {
+				log.Println("Error converting senderId to objectId:", err)
+				return
+			}
+			
+			h.Clients[res] = conn
 
 		case conn := <- h.ClientRemovalChannel:
+
 			senderId := conn.Query("senderId")
-			delete(h.Clients, senderId)
+
+			res, err := helper.ConvertToObjectId(senderId)
+			if err != nil {
+				log.Println("Error converting senderId to objectId:", err)
+				return
+			}
+
+			delete(h.Clients, res)
 
 		case msg := <- h.BroadcastChat:
-			receiverConn, ok := h.Clients[msg.ReceiverId]
+
+			res, err := helper.ConvertToObjectId(msg.SenderId)
+			if err != nil {
+				log.Println("Error converting senderId to objectId:", err)
+				return
+			}
+
+			receiverConn, ok := h.Clients[res]
 			if ok {
 				receiverConn.WriteJSON(msg)
 			}
@@ -53,14 +80,13 @@ func PersonalChat(h *Hub) func (*websocket.Conn) {
 
 		}()
 
-		
 		h.ClientRegisterChannel <- conn
 
 		for {
 
 			messageType, message, err := conn.ReadMessage() 
 			if err != nil {
-				fmt.Println(err)
+				log.Println("Error whiler register a new client connection:", err)
 				return
 			}
 			if messageType == websocket.TextMessage {
@@ -72,7 +98,14 @@ func PersonalChat(h *Hub) func (*websocket.Conn) {
 					ReceiverId: receiverId,
 					Message: string(message),
 				}
-				h.BroadcastChat <- chat
+
+				collection := database.GetDatabase().Collection("chat")
+				_, err := collection.InsertOne(context.Background(), chat)
+				if err != nil {
+					log.Println("Error while sending a message:", err)
+				} else {
+					h.BroadcastChat <- chat
+				}
 
 			}
 

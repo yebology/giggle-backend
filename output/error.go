@@ -1,6 +1,8 @@
 package output
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 func GetError(c *fiber.Ctx, status int, err string) error {
 
