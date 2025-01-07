@@ -1,4 +1,4 @@
-package middleware
+package ws
 
 import (
 	"github.com/gofiber/contrib/websocket"

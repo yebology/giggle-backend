@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/controller"
 	"github.com/yebology/giggle-backend/middleware"
+	WsMiddleware "github.com/yebology/giggle-backend/middleware/ws"
 	"github.com/yebology/giggle-backend/model/ws"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -22,7 +23,7 @@ func SetUp(app *fiber.App) {
 
 	go hub.Run()
 
-	app.Use("/ws", middleware.ValidateWebSocketUpgrade)
+	app.Use("/ws", middleware.AuthMiddleware, WsMiddleware.ValidateChatSender, WsMiddleware.ValidateWebSocketUpgrade)
 
 	app.Get("/ws/personalChat", websocket.New(controller.PersonalChat(hub)))
 

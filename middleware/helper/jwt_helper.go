@@ -9,6 +9,9 @@ import (
 func ParseToken(c *fiber.Ctx) (jwt.MapClaims, error) {
 
 	token := c.Get("Authorization")
+	if token == "" {
+		token = c.Query("Authorization")
+	}	
 
 	claims := jwt.MapClaims{}
 	parsedToken, err := jwt.ParseWithClaims(token, claims, GetSecretKey)

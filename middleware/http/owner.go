@@ -1,4 +1,4 @@
-package middleware
+package http
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/yebology/giggle-backend/constant"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/middleware/helper"
-	"github.com/yebology/giggle-backend/model"
+	"github.com/yebology/giggle-backend/model/http"
 	"github.com/yebology/giggle-backend/output"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -33,7 +33,7 @@ func PostOwnerMiddleware(c *fiber.Ctx) error {
 	collection := database.GetDatabase().Collection("post")
 	filter := bson.M{"_id": objectId}
 
-	var post model.Post
+	var post http.Post
 	err = collection.FindOne(ctx, filter).Decode(&post)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.DataUnavailableError))
@@ -69,7 +69,7 @@ func GroupOwnerMiddleware(c *fiber.Ctx) error {
 	collection := database.GetDatabase().Collection("group")
 	filter := bson.M{"_id": objectId}
 
-	var group model.Group
+	var group http.Group
 	err = collection.FindOne(ctx, filter).Decode(&group)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.DataUnavailableError))

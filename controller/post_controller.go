@@ -8,7 +8,7 @@ import (
 	"github.com/yebology/giggle-backend/constant"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/global"
-	"github.com/yebology/giggle-backend/model"
+	"github.com/yebology/giggle-backend/model/http"
 	"github.com/yebology/giggle-backend/output"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -19,7 +19,7 @@ func CreatePost(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var post model.Post
+	var post http.Post
 	err := c.BodyParser(&post)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
@@ -64,7 +64,7 @@ func UpdatePost(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
 	}
 
-	var post model.Post
+	var post http.Post
 	err = c.BodyParser(&post)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
@@ -122,7 +122,7 @@ func GetPosts(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var posts []model.Post
+	var posts []http.Post
 
 	collection := database.GetDatabase().Collection("post")
 	cursor, err := collection.Find(ctx, bson.M{})

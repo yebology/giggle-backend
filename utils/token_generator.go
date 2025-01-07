@@ -2,10 +2,10 @@ package utils
 
 import (
 	"github.com/dgrijalva/jwt-go"
-	"github.com/yebology/giggle-backend/model"
+	ws "github.com/yebology/giggle-backend/model/http"
 )
 
-func GenerateJWT(user model.User) (string, error) {
+func GenerateJWT(user ws.User) (string, error) {
 	
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id": user.Id,

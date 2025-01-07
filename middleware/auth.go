@@ -7,7 +7,7 @@ import (
 	"github.com/yebology/giggle-backend/output"
 )
 
-func UserMiddleware(c *fiber.Ctx) error {
+func AuthMiddleware(c *fiber.Ctx) error {
 
 	claims, err := helper.ParseToken(c)
 	if err != nil {

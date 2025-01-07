@@ -4,19 +4,19 @@ import (
 	"context"
 
 	"github.com/yebology/giggle-backend/database"
-	"github.com/yebology/giggle-backend/model"
+	"github.com/yebology/giggle-backend/model/http"
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CheckUser(ctx context.Context, filter bson.M) (model.User, error) {
+func CheckUser(ctx context.Context, filter bson.M) (http.User, error) {
 
-	var user model.User
+	var user http.User
 	collection := database.GetDatabase().Collection("user")
 
 	err := collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
-		return model.User{}, err
+		return http.User{}, err
 	}
 
 	return user, nil

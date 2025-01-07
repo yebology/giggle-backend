@@ -8,8 +8,8 @@ import (
 	"github.com/yebology/giggle-backend/constant"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/global"
-	"github.com/yebology/giggle-backend/model"
 	"github.com/yebology/giggle-backend/model/data"
+	"github.com/yebology/giggle-backend/model/http"
 	"github.com/yebology/giggle-backend/output"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,7 +20,7 @@ func CreateGroup(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var group model.Group
+	var group http.Group
 	err := c.BodyParser(&group)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
@@ -76,7 +76,7 @@ func InviteMember(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
 	}
 
-	var group model.Group
+	var group http.Group
 	filter := bson.M{"_id": objectId}
 
 	collection := database.GetDatabase().Collection("group")
@@ -115,7 +115,7 @@ func GetUserGroups(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
 	}
 
-	var groups []model.Group
+	var groups []http.Group
 	collection := database.GetDatabase().Collection("group")
 	filter := bson.M{"_groupOwnerId": objectId}
 

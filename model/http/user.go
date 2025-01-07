@@ -1,4 +1,4 @@
-package model
+package http
 
 import (
 	"github.com/yebology/giggle-backend/constant"

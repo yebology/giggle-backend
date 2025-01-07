@@ -10,8 +10,8 @@ import (
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/global"
 	"github.com/yebology/giggle-backend/mail"
-	"github.com/yebology/giggle-backend/model"
 	"github.com/yebology/giggle-backend/model/data"
+	"github.com/yebology/giggle-backend/model/http"
 	"github.com/yebology/giggle-backend/output"
 	"github.com/yebology/giggle-backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,7 +22,7 @@ func Register(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var user model.User
+	var user http.User
 	err := c.BodyParser(&user)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
