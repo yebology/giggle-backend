@@ -12,7 +12,7 @@ func SetUp(app *fiber.App) {
 
 	hub := &controller.Hub{
 
-		Clients: make(map[*websocket.Conn]bool),
+		Clients: make(map[string]*websocket.Conn),
 		ClientRegisterChannel: make(chan *websocket.Conn),
 		ClientRemovalChannel: make(chan *websocket.Conn),
 		BroadcastChat: make(chan ws.PersonalChat),
@@ -23,8 +23,8 @@ func SetUp(app *fiber.App) {
 
 	app.Use("/ws", middleware.ValidateWebSocketUpgrade)
 
-	app.Use("/ws/personalChat", websocket.New(controller.PersonalChat(hub)))
+	app.Get("/ws/personalChat", websocket.New(controller.PersonalChat(hub)))
 
-	app.Use("/ws/groupChat", websocket.New(controller.GroupChat))
+	app.Get("/ws/groupChat", websocket.New(controller.GroupChat))
 
 }

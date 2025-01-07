@@ -9,7 +9,7 @@ import (
 
 type Hub struct {
 
-	Clients						map[*websocket.Conn]bool
+	Clients						map[string]*websocket.Conn
 	ClientRegisterChannel		chan *websocket.Conn
 	ClientRemovalChannel		chan *websocket.Conn
 	BroadcastChat				chan ws.PersonalChat
@@ -23,17 +23,18 @@ func (h *Hub) Run() {
 		select {
 
 		case conn := <- h.ClientRegisterChannel:
-			h.Clients[conn] = true
+			senderId := conn.Query("senderId")
+			h.Clients[senderId] = conn
 
 		case conn := <- h.ClientRemovalChannel:
-			delete(h.Clients, conn)
+			senderId := conn.Query("senderId")
+			delete(h.Clients, senderId)
 
 		case msg := <- h.BroadcastChat:
-			for conn := range h.Clients {
-
-				conn.WriteJSON(msg)
-
-			} 
+			receiverConn, ok := h.Clients[msg.ReceiverId]
+			if ok {
+				receiverConn.WriteJSON(msg)
+			}
 
 		}
 
@@ -52,8 +53,7 @@ func PersonalChat(h *Hub) func (*websocket.Conn) {
 
 		}()
 
-		senderId := conn.Query("senderId")
-		receiverId := conn.Query("receiverId")
+		
 		h.ClientRegisterChannel <- conn
 
 		for {
@@ -64,13 +64,18 @@ func PersonalChat(h *Hub) func (*websocket.Conn) {
 				return
 			}
 			if messageType == websocket.TextMessage {
+
+				senderId := conn.Query("senderId")
+				receiverId := conn.Query("receiverId")
 				chat := ws.PersonalChat{
 					SenderId: senderId,
 					ReceiverId: receiverId,
 					Message: string(message),
 				}
 				h.BroadcastChat <- chat
+
 			}
+
 
 		}
 
