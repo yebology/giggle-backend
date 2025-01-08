@@ -67,13 +67,7 @@ func GetGroupUsersId(filter bson.M) ([]primitive.ObjectID, error) {
 	var group http.Group
 	collection := database.GetDatabase().Collection("group")
 
-	cursor, err := collection.Find(ctx, group)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	err = cursor.All(ctx, &group)
+	err := collection.FindOne(ctx, filter).Decode(&group)
 	if err != nil {
 		return nil, err
 	}

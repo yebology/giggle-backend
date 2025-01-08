@@ -95,7 +95,7 @@ func Chat(h *Hub) func (*websocket.Conn) {
 
 			messageType, message, err := conn.ReadMessage() 
 			if err != nil {
-				log.Println("Error whiler register a new client connection:", err)
+				log.Println("Error while register a new client connection:", err)
 				return
 			}
 
@@ -134,7 +134,7 @@ func Chat(h *Hub) func (*websocket.Conn) {
 
 				if chatType == "Group" {
 
-					filter := bson.M{"_groupId": receiverId}
+					filter := bson.M{"_id": receiverObjectId}
 
 					receiverIds, err := helper.GetGroupUsersId(filter)
 					if err != nil {
