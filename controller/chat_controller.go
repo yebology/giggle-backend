@@ -52,13 +52,7 @@ func (h *Hub) Run() {
 
 		case msg := <- h.BroadcastChat:
 
-			res, err := helper.ConvertToObjectId(msg.SenderId)
-			if err != nil {
-				log.Println("Error converting senderId to objectId:", err)
-				return
-			}
-
-			receiverConn, ok := h.Clients[res]
+			receiverConn, ok := h.Clients[msg.ReceiverId]
 			if ok {
 				receiverConn.WriteJSON(msg)
 			}
@@ -93,14 +87,27 @@ func PersonalChat(h *Hub) func (*websocket.Conn) {
 
 				senderId := conn.Query("senderId")
 				receiverId := conn.Query("receiverId")
+
+				senderObjectId, err := helper.ConvertToObjectId(senderId)
+				if err != nil {
+					log.Println("Error converting senderId to objectId:", err)
+					return
+				}
+
+				receiverObjectId, err := helper.ConvertToObjectId(receiverId)
+				if err != nil {
+					log.Println("Error converting receiverId to objectId:", err)
+					return
+				}
+
 				chat := ws.PersonalChat{
-					SenderId: senderId,
-					ReceiverId: receiverId,
+					SenderId: senderObjectId,
+					ReceiverId: receiverObjectId,
 					Message: string(message),
 				}
 
-				collection := database.GetDatabase().Collection("chat")
-				_, err := collection.InsertOne(context.Background(), chat)
+				collection := database.GetDatabase().Collection("personal_chat")
+				_, err = collection.InsertOne(context.Background(), chat)
 				if err != nil {
 					log.Println("Error while sending a message:", err)
 				} else {
@@ -118,6 +125,6 @@ func PersonalChat(h *Hub) func (*websocket.Conn) {
 
 func GroupChat(c *websocket.Conn) {
 
-
+	
 
 }
