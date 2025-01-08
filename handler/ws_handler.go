@@ -14,10 +14,11 @@ func SetUp(app *fiber.App) {
 
 	hub := &controller.Hub{
 
-		Clients: make(map[primitive.ObjectID]*websocket.Conn),
-		ClientRegisterChannel: make(chan *websocket.Conn),
-		ClientRemovalChannel: make(chan *websocket.Conn),
-		BroadcastChat: make(chan ws.PersonalChat),
+		Clients: 				make(map[primitive.ObjectID]*websocket.Conn),
+		ClientRegisterChannel: 	make(chan *websocket.Conn),
+		ClientRemovalChannel: 	make(chan *websocket.Conn),
+		BroadcastChat: 			make(chan ws.Chat),
+		Groups:					make(map[primitive.ObjectID][]primitive.ObjectID),
 
 	}
 
@@ -27,6 +28,6 @@ func SetUp(app *fiber.App) {
 
 	app.Get("/ws/personalChat", websocket.New(controller.PersonalChat(hub)))
 
-	app.Get("/ws/groupChat", websocket.New(controller.GroupChat))
+	// app.Get("/ws/groupChat/:id", websocket.New(controller.GroupChat))
 
 }

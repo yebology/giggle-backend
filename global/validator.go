@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/yebology/giggle-backend/constant"
+	"github.com/yebology/giggle-backend/constant/chat"
 	"github.com/yebology/giggle-backend/constant/post"
 )
 
@@ -30,6 +31,7 @@ func RegisterValidation() {
 	Validate.RegisterValidation("validPostType", ValidatePostType)
 	Validate.RegisterValidation("validPostCategory", ValidatePostCategory)
 	Validate.RegisterValidation("validPostStatus", ValidatePostStatus)
+	Validate.RegisterValidation("validChatType", ValidateChatType)
 
 }
 
@@ -84,6 +86,19 @@ func ValidatePostStatus(fl validator.FieldLevel) bool {
 	
 	input := fl.Field().String()
 	for _, allowed := range post.AllowedStatus {
+		if string(allowed) == input {
+			return true
+		}
+	}
+
+	return false
+
+}
+
+func ValidateChatType(fl validator.FieldLevel) bool {
+
+	input := fl.Field().String()
+	for _, allowed := range chat.AllowedType {
 		if string(allowed) == input {
 			return true
 		}

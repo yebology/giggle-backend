@@ -16,7 +16,8 @@ type Hub struct {
 	Clients						map[primitive.ObjectID]*websocket.Conn
 	ClientRegisterChannel		chan *websocket.Conn
 	ClientRemovalChannel		chan *websocket.Conn
-	BroadcastChat				chan ws.PersonalChat
+	BroadcastChat				chan ws.Chat
+	Groups						map[primitive.ObjectID][]primitive.ObjectID
 
 }
 
@@ -100,13 +101,13 @@ func PersonalChat(h *Hub) func (*websocket.Conn) {
 					return
 				}
 
-				chat := ws.PersonalChat{
+				chat := ws.Chat{
 					SenderId: senderObjectId,
 					ReceiverId: receiverObjectId,
 					Message: string(message),
 				}
 
-				collection := database.GetDatabase().Collection("personal_chat")
+				collection := database.GetDatabase().Collection("chat")
 				_, err = collection.InsertOne(context.Background(), chat)
 				if err != nil {
 					log.Println("Error while sending a message:", err)
@@ -120,11 +121,5 @@ func PersonalChat(h *Hub) func (*websocket.Conn) {
 		}
 
 	}
-
-}
-
-func GroupChat(c *websocket.Conn) {
-
-	
 
 }
