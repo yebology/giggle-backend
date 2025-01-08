@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/yebology/giggle-backend/constant"
+	"github.com/yebology/giggle-backend/controller/helper"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/global"
 	"github.com/yebology/giggle-backend/model/data"
@@ -106,28 +107,17 @@ func InviteMember(c *fiber.Ctx) error {
 
 func GetUserGroups(c *fiber.Ctx) error {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	id := c.Params("user_id")
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
 	}
 
-	var groups []http.Group
-	collection := database.GetDatabase().Collection("group")
 	filter := bson.M{"_groupOwnerId": objectId}
 
-	cursor, err := collection.Find(ctx, filter)
+	groups, err := helper.GetGroupByFilter(filter)
 	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToRetrieveData))
-	}
-	defer cursor.Close(ctx)
-
-	err = cursor.All(ctx, &groups)
-	if err != nil {
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToDecodeData))
+		return output.GetError(c, fiber.StatusInternalServerError, string(constant.FailedToRetrieveData))
 	}
 
 	return output.GetSuccess(c, fiber.Map{

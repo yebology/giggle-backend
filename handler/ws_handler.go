@@ -6,6 +6,7 @@ import (
 	"github.com/yebology/giggle-backend/controller"
 	"github.com/yebology/giggle-backend/middleware"
 	WsMiddleware "github.com/yebology/giggle-backend/middleware/ws"
+	"github.com/yebology/giggle-backend/model/http"
 	"github.com/yebology/giggle-backend/model/ws"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -18,7 +19,8 @@ func SetUp(app *fiber.App) {
 		ClientRegisterChannel: 	make(chan *websocket.Conn),
 		ClientRemovalChannel: 	make(chan *websocket.Conn),
 		BroadcastChat: 			make(chan ws.Chat),
-		Groups:					make(map[primitive.ObjectID][]primitive.ObjectID),
+		Group:					make(chan http.Group),
+		BroadcastGroupChat: 	make(chan ws.GroupChat),
 
 	}
 
@@ -26,8 +28,6 @@ func SetUp(app *fiber.App) {
 
 	app.Use("/ws", middleware.AuthMiddleware, WsMiddleware.ValidateChatSender, WsMiddleware.ValidateWebSocketUpgrade)
 
-	app.Get("/ws/personalChat", websocket.New(controller.PersonalChat(hub)))
-
-	// app.Get("/ws/groupChat/:id", websocket.New(controller.GroupChat))
+	app.Get("/ws/chat", websocket.New(controller.Chat(hub)))
 
 }
