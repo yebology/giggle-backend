@@ -2,6 +2,11 @@ package helper
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/hex"
+	"io"
 	"log"
 	"strconv"
 	"time"
@@ -75,5 +80,75 @@ func GetGroupUsersId(filter bson.M) ([]primitive.ObjectID, error) {
 	receiverIds := append(group.GroupMemberIds, group.GroupOwnerId)
 
 	return receiverIds, nil
+
+}
+
+func EncryptMessageWithAES256(message string) (string, error) {
+	
+	plainText := []byte(message)
+
+	key := make([]byte, 32)
+	_, err := rand.Reader.Read(key)
+	if err != nil {
+		return "", err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+	
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+
+	nonce := make([]byte, gcm.NonceSize())
+	dst := make([]byte, 0, len(plainText)+gcm.NonceSize()+gcm.Overhead())
+
+	_, err = io.ReadFull(rand.Reader, nonce)
+	if err != nil {
+		return "", err
+	}
+
+	cipherText := gcm.Seal(dst, nonce, plainText, nil)
+
+	encryptMessage := hex.EncodeToString(cipherText)
+
+	return encryptMessage, nil
+
+}
+
+func DecryptMessageWithAES256(encryptedMessage string) (string, error) {
+
+	key := make([]byte, 32)
+	_, err := rand.Reader.Read(key)
+	if err != nil {
+		return "", err
+	}
+
+	block, err := aes.NewCipher(key)
+    if err != nil {
+        return "", err
+    }
+
+	gcm, err := cipher.NewGCM(block)
+    if err != nil {
+        return "", err
+    }
+
+	nonce := make([]byte, gcm.NonceSize())
+
+	cipherText, err := hex.DecodeString(encryptedMessage)
+	if err != nil {
+		return "", err
+	}
+
+	plainText, err := gcm.Open(nil, nonce, cipherText, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return string(plainText), err
 
 }
