@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"io"
 	"log"
@@ -83,72 +84,99 @@ func GetGroupUsersId(filter bson.M) ([]primitive.ObjectID, error) {
 
 }
 
-func EncryptMessageWithAES256(message string) (string, error) {
-	
-	plainText := []byte(message)
+// Generate32BytesKey generates a 32-byte key using the SHA-256 hash function.
+func Generate32BytesKey(senderObjectId primitive.ObjectID, receiverObjectId primitive.ObjectID) ([]byte) {
 
-	key := make([]byte, 32)
-	_, err := rand.Reader.Read(key)
-	if err != nil {
-		return "", err
-	}
+	// Concatenate the hexadecimal representations of the sender and receiver ObjectIDs,
+	// then hash the result using SHA-256 to produce a 32-byte array.
+	key := sha256.Sum256([]byte(senderObjectId.Hex() + receiverObjectId.Hex()))
 
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-	
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
-	}
-
-	nonce := make([]byte, gcm.NonceSize())
-	dst := make([]byte, 0, len(plainText)+gcm.NonceSize()+gcm.Overhead())
-
-	_, err = io.ReadFull(rand.Reader, nonce)
-	if err != nil {
-		return "", err
-	}
-
-	cipherText := gcm.Seal(dst, nonce, plainText, nil)
-
-	encryptMessage := hex.EncodeToString(cipherText)
-
-	return encryptMessage, nil
+	// Return the generated key as a byte slice.
+	return key[:]
 
 }
 
-func DecryptMessageWithAES256(encryptedMessage string) (string, error) {
+// EncryptMessageWithAES256 encrypts a given message using AES-256 in GCM mode.
+func EncryptMessageWithAES256(message string, key []byte) (string, error) {
+	
+	// Convert the input message to a byte slice.
+	plainText := []byte(message)
 
-	key := make([]byte, 32)
-	_, err := rand.Reader.Read(key)
+	// Create a new AES cipher block with the key (32-byte).
+	block, err := aes.NewCipher(key)
 	if err != nil {
+		// It will return an error if the process fails.
+		return "", err
+	}
+	
+	// Create a GCM (Galois/Counter Mode) for encryption based on the cipher block.
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		// It will return an error if the process fails.
 		return "", err
 	}
 
-	block, err := aes.NewCipher(key)
-    if err != nil {
-        return "", err
-    }
-
-	gcm, err := cipher.NewGCM(block)
-    if err != nil {
-        return "", err
-    }
-
+	// Allocate space for the nonce (GCM requires a unique nonce for every encryption).
 	nonce := make([]byte, gcm.NonceSize())
 
-	cipherText, err := hex.DecodeString(encryptedMessage)
+	// Fill the nonce with cryptographically secure random bytes.
+	// Ensures the nonce buffer is fully populated with the required number of bytes.
+	_, err = io.ReadFull(rand.Reader, nonce)
 	if err != nil {
+		// It will return an error if the process fails.
 		return "", err
 	}
 
+	// Encrypt the plaintext using the generated nonce and GCM, and append it to the destination buffer.
+	cipherText := gcm.Seal(nonce, nonce, plainText, nil)
+
+	// Encode the ciphertext to a hex string for readability.
+	encMessage := hex.EncodeToString(cipherText)
+
+	// Return the encrypted message.
+	return encMessage, nil
+
+}
+
+// DecryptMessageWithAES256 decrypts an AES-256 encrypted message using the provided key.
+func DecryptMessageWithAES256(encMessage string, key []byte) (string, error) {
+
+	// Decode the encrypted message to bytes.
+	cipherText, err := hex.DecodeString(encMessage)
+	if err != nil {
+		// It will return an error if the process fails.
+		return "", err
+	}
+
+	// Create a new AES cipher block with the key (32-byte).
+	block, err := aes.NewCipher(key)
+    if err != nil {
+		// It will return an error if the process fails.
+        return "", err
+    }
+
+	// Create a GCM (Galois/Counter Mode) for encryption based on the cipher block.
+	gcm, err := cipher.NewGCM(block)
+    if err != nil {
+		// It will return an error if the process fails.
+        return "", err
+    }
+
+	// Extract the nonce (initialization vector) from the start of the ciphertext.
+	// Commonly, nonce size is 12 bytes.
+	nonce := cipherText[:gcm.NonceSize()]
+
+	// Update the ciphertext to exclude the nonce.
+	cipherText = cipherText[gcm.NonceSize():]
+
+	// Decrypt the ciphertext using the nonce and GCM.
 	plainText, err := gcm.Open(nil, nonce, cipherText, nil)
 	if err != nil {
+		// It will return an error if the process fails.
 		return "", err
 	}
 
-	return string(plainText), err
+	// Convert the decrypted plaintext to a string and return it.
+	return string(plainText), nil
 
 }

@@ -59,16 +59,38 @@ func (h *Hub) Run() {
 		case msg := <- h.BroadcastChat:
 
 			receiverConn, ok := h.Clients[msg.ReceiverId]
+			
+			key := helper.Generate32BytesKey(msg.SenderId, msg.ReceiverId)
+
+			decMessage, err := helper.DecryptMessageWithAES256(msg.Message, key)
+			if err != nil {
+				log.Println("Error while decrypting message:", err)
+				return
+			}
+
 			if ok {
-				receiverConn.WriteJSON(msg)
+				receiverConn.WriteJSON(decMessage)
 			}
 
 		case groupMsg := <- h.BroadcastGroupChat:
 
+			key := helper.Generate32BytesKey(groupMsg.Chat.SenderId, groupMsg.Chat.ReceiverId)
+
+			decMessage, err := helper.DecryptMessageWithAES256(groupMsg.Chat.Message, key)
+			if err != nil {
+				log.Println("Error while decrypting message:", err)
+				return
+			}
+
 			for _, receiverId := range groupMsg.ReceiverIds {
-				receiverConn, ok := h.Clients[receiverId]
-				if ok {
-					receiverConn.WriteJSON(groupMsg.Chat)
+
+				if receiverId != groupMsg.Chat.SenderId {
+
+					receiverConn, ok := h.Clients[receiverId]
+					if ok {
+						receiverConn.WriteJSON(decMessage)
+					}
+					
 				}
 			}
 
@@ -117,10 +139,18 @@ func Chat(h *Hub) func (*websocket.Conn) {
 					return
 				}
 
+				key := helper.Generate32BytesKey(senderObjectId, receiverObjectId)
+
+				encMessage, err := helper.EncryptMessageWithAES256(string(message), key)
+				if err != nil {
+					log.Println("Error encrypting message:", err)
+					return
+				}
+
 				chat := ws.Chat{
 					SenderId: senderObjectId,
 					ReceiverId: receiverObjectId,
-					Message: string(message),
+					Message: encMessage,
 					ChatTimestamp: uint64(time.Now().Unix()),
 					ChatType: chat.Chat(chatType),
 				}
