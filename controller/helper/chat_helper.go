@@ -18,70 +18,87 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// ConvertToObjectId converts a string ID to a MongoDB ObjectID
 func ConvertToObjectId(id string) (primitive.ObjectID, error) {
 
+	// Convert the string ID to a MongoDB ObjectID
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
+		// Log the error and return a NilObjectID if conversion fails
 		log.Println("Error converting id to objectId:", err)
 		return primitive.NilObjectID, err
-	} 
+	}
 
+	// Return the converted ObjectID and nil for error if successful
 	return objectId, nil
-
 }
 
+// ConvertToObjectIdBoth converts two string IDs (sender and receiver) to MongoDB ObjectIDs
 func ConvertToObjectIdBoth(senderId string, receiverId string) (primitive.ObjectID, primitive.ObjectID, error) {
 
+	// Convert senderId to MongoDB ObjectID
 	senderObjectId, err := primitive.ObjectIDFromHex(senderId)
 	if err != nil {
+		// Log the error and return NilObjectIDs for both sender and receiver if conversion fails
 		log.Println("Error converting senderId to objectId:", err)
 		return primitive.NilObjectID, primitive.NilObjectID, err
-	} 
+	}
 
+	// Convert receiverId to MongoDB ObjectID
 	receiverObjectId, err := primitive.ObjectIDFromHex(receiverId)
 	if err != nil {
+		// Log the error and return NilObjectIDs for both sender and receiver if conversion fails
 		log.Println("Error converting receiverId to objectId:", err)
 		return primitive.NilObjectID, primitive.NilObjectID, err
 	}
 
+	// Return both converted ObjectIDs and nil for error if successful
 	return senderObjectId, receiverObjectId, nil
-
 }
 
+// CheckChatType converts a string representation of a boolean to a chat type ("Personal" or "Group")
 func CheckChatType(isGroupChatStr string) (string, error) {
 
+	// Parse the string as a boolean to determine if it's a group chat
 	isGroupChat, err := strconv.ParseBool(isGroupChatStr)
 	if err != nil {
+		// Log the error if parsing fails and return an empty string
 		log.Println("Error while converting data:", err)
 		return "", err
 	}
 
+	// Return "Group" if it's a group chat, otherwise return "Personal"
 	chatType := "Personal"
 	if isGroupChat {
 		chatType = "Group"
 	}
 
 	return chatType, nil
-
 }
 
+// GetGroupUsersId retrieves the list of user IDs (including the group owner) from a group
 func GetGroupUsersId(filter bson.M) ([]primitive.ObjectID, error) {
 
+	// Create a context with timeout to prevent blocking the request indefinitely
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// Retrieve the group document from the database
 	var group http.Group
 	collection := database.GetDatabase().Collection("group")
 
+	// Decode the group from the database based on the provided filter
 	err := collection.FindOne(ctx, filter).Decode(&group)
 	if err != nil {
+		// Return nil if there is an error decoding the group
 		return nil, err
 	}
 
+	// Combine the group member IDs and group owner ID
 	receiverIds := append(group.GroupMemberIds, group.GroupOwnerId)
 
+	// Return the list of receiver IDs (group members and owner) and nil for error if successful
 	return receiverIds, nil
-
 }
 
 // Generate32BytesKey generates a 32-byte key using the SHA-256 hash function.
