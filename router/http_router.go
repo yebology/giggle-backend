@@ -31,9 +31,9 @@ func SetUp(app *fiber.App) {
 
 	// Proposal management routes
 	// Done check with Postman
-	app.Get("/api/get_proposals/:user_id", middleware.AuthMiddleware, controller.GetProposals)
-	app.Post("/api/create_proposal/:id", middleware.AuthMiddleware, http.PostOwnerMiddleware, controller.CreateProposal)
-	app.Patch("/api/accept_proposal/:id", middleware.AuthMiddleware, http.BuyerMiddleware, controller.AcceptProposal)
+	app.Get("/api/get_proposals/:user_id", middleware.AuthMiddleware, controller.GetProposals) // Retrieves user's proposals (requires authentication)
+	app.Post("/api/create_proposal/:id", middleware.AuthMiddleware, http.PostOwnerMiddleware, controller.CreateProposal)  // Creates a new proposal (requires authentication and ownership check)
+	app.Patch("/api/accept_proposal/:id", middleware.AuthMiddleware, http.BuyerMiddleware, controller.AcceptProposal) // Updates proposal status (requires authentication and buyer check)
 
 	// Group management routes
 	// Done check with Postman
