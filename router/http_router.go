@@ -29,8 +29,10 @@ func SetUp(app *fiber.App) {
 	app.Patch("/api/update_post/:id", middleware.AuthMiddleware, http.PostOwnerMiddleware, controller.UpdatePost)  // Updates an existing post (requires authentication and ownership check)
 	app.Delete("/api/delete_post/:id", middleware.AuthMiddleware, http.PostOwnerMiddleware, controller.DeletePost)  // Deletes a post (requires authentication and ownership check)
 
+	// Proposal management routes
+	// Done check with Postman
 	app.Get("/api/get_proposals/:user_id", middleware.AuthMiddleware, controller.GetProposals)
-	app.Post("/api/create_proposal", middleware.AuthMiddleware, controller.CreateProposal)
+	app.Post("/api/create_proposal/:id", middleware.AuthMiddleware, http.PostOwnerMiddleware, controller.CreateProposal)
 	app.Patch("/api/accept_proposal/:id", middleware.AuthMiddleware, http.BuyerMiddleware, controller.AcceptProposal)
 
 	// Group management routes

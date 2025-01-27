@@ -18,14 +18,14 @@ type Group struct {
 
 	// GroupName is the name of the group.
 	// The `validate:"required,min=8,max=100"` tag ensures that the name must be provided and must have a length between 8 and 100 characters.
-	GroupName 			string 					`json:"groupName" validate:"required,min=8,max=100"`
+	GroupName 			string 					`json:"groupName" bson:"groupName" validate:"required,min=8,max=100"`
 
 	// GroupImageHash is a hash or reference to the group's profile image.
 	// The `validate:"required"` tag ensures that an image hash must be provided.
-	GroupImageHash 		string 					`json:"groupImageHash" validate:"required"`
+	GroupImageHash 		string 					`json:"groupImageHash" bson:"groupImageHash" validate:"required"`
 
 	// GroupDescription provides additional details about the group.
 	// The `validate:"required,min=8,max=255"` tag ensures that the description must be provided with a length between 8 and 255 characters.
-	GroupDescription 	string 					`json:"groupDescription" validate:"required,min=8,max=255"`
+	GroupDescription 	string 					`json:"groupDescription" bson:"groupDescription" validate:"required,min=8,max=255"`
 
 }

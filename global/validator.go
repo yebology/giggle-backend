@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/yebology/giggle-backend/constant"
-	"github.com/yebology/giggle-backend/constant/chat"
 	"github.com/yebology/giggle-backend/constant/post"
 )
 
@@ -34,7 +33,7 @@ func RegisterValidation() {
 	Validate.RegisterValidation("validPostType", ValidatePostType)
 	Validate.RegisterValidation("validPostCategory", ValidatePostCategory)
 	Validate.RegisterValidation("validPostStatus", ValidatePostStatus)
-	Validate.RegisterValidation("validChatType", ValidateChatType)
+	Validate.RegisterValidation("isFalse", ValidateProposalStatus)
 }
 
 // GetValidator returns the singleton validator instance.
@@ -88,13 +87,6 @@ func ValidatePostStatus(fl validator.FieldLevel) bool {
 	return false
 }
 
-// ValidateChatType checks if the input string is a valid chat type as defined in the `chat.AllowedType` slice.
-func ValidateChatType(fl validator.FieldLevel) bool {
-	input := fl.Field().String()
-	for _, allowed := range chat.AllowedType {
-		if string(allowed) == input {
-			return true
-		}
-	}
-	return false
+func ValidateProposalStatus(fl validator.FieldLevel) bool {
+	return !fl.Field().Bool()
 }

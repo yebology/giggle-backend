@@ -36,19 +36,13 @@ func CreatePost(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
 
-	// Ensure post type and required talent values are valid
-	if (post.PostType == "Hire" && post.RequiredTalent == 0) || (post.PostType == "Service" && post.RequiredTalent > 0) {
-		// Return validation error if conditions are not met
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
+	// Ensure post type, required talent, and network values are valid
+	if	(post.PostType == "Hire" && post.RequiredTalent == 0) || 
+		(post.PostType == "Service" && post.RequiredTalent > 0) || 
+		(post.PostType == "Service" && (post.Network != "ETH" && post.Network != "SOL")) {
+ 		// Return validation error if conditions are not met
+ 		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
-
-	// Convert the post creator ID to an ObjectID
-	objectId, err := primitive.ObjectIDFromHex(post.PostCreatorId.Hex())
-	if err != nil {
-		// Return error if ID conversion fails
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.FailedToParseData))
-	}
-	post.PostCreatorId = objectId
 
 	// Insert the new post into the database
 	collection := database.GetDatabase().Collection("post")

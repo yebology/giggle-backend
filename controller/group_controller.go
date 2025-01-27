@@ -38,13 +38,6 @@ func CreateGroup(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
 	}
 
-	// Ensure the group owner ID is a valid ObjectID
-	_, err = primitive.ObjectIDFromHex(group.GroupOwnerId.Hex())
-	if err != nil {
-		// Return error if the group owner ID is not a valid ObjectID
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
-	}
-
 	// Insert the new group into the database
 	collection := database.GetDatabase().Collection("group")
 	_, err = collection.InsertOne(ctx, group)
@@ -89,13 +82,6 @@ func InviteMember(c *fiber.Ctx) error {
 	if err != nil {
 		// Return error if the invitation data is invalid
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.ValidationError))
-	}
-
-	// Ensure the member ID in the invitation is valid
-	_, err = primitive.ObjectIDFromHex(invitation.MemberId.Hex())
-	if err != nil {
-		// Return error if the member ID is invalid
-		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
 	}
 
 	// Retrieve the group from the database
@@ -143,8 +129,13 @@ func GetUserGroups(c *fiber.Ctx) error {
 		return output.GetError(c, fiber.StatusBadRequest, string(constant.InvalidIdError))
 	}
 
-	// Define a filter to find groups owned by the user
-	filter := bson.M{"_groupOwnerId": objectId}
+	// Define a filter to find groups based on user's ObjectId
+	filter := bson.M{
+		"$or": []bson.M{
+			{"_groupOwnerId": objectId},
+			{"_groupMemberIds": objectId},
+		},
+	}
 
 	// Retrieve groups from the database using the helper function
 	groups, err := helper.GetGroupByFilter(filter)

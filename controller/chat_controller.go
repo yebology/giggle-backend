@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gofiber/contrib/websocket"
-	"github.com/yebology/giggle-backend/constant/chat"
 	"github.com/yebology/giggle-backend/controller/helper"
 	"github.com/yebology/giggle-backend/database"
 	"github.com/yebology/giggle-backend/model/http"
@@ -171,7 +170,6 @@ func Chat(h *Hub) func(*websocket.Conn) {
 					ReceiverId:    receiverObjectId,
 					Message:       encMessage,
 					ChatTimestamp: uint64(time.Now().Unix()),
-					ChatType:      chat.Chat(chatType),
 				}
 
 				// Save the chat message to the database
